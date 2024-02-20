@@ -7,12 +7,21 @@ import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 @Component
 @RequiredArgsConstructor
 public class WebSocketEventListener {
     private final SimpMessageSendingOperations messageSendingOperations;
+    public static int onlinePersons = 0;
+
+    @EventListener
+    public void handleWebSocketConnectedListener(SessionConnectedEvent event){
+        onlinePersons++;
+        messageSendingOperations.convertAndSend("/topic/online", onlinePersons);
+    }
+
 
     @EventListener
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
@@ -26,5 +35,7 @@ public class WebSocketEventListener {
 
             messageSendingOperations.convertAndSend("/topic/public", chatMessage);
         }
+        onlinePersons--;
+        messageSendingOperations.convertAndSend("/topic/online", onlinePersons);
     }
 }
